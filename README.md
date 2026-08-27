@@ -66,6 +66,7 @@ camera access, testing the Contacts hand-off on a real device, etc.).
 - [Building & deploying](#building--deploying)
 - [Testing on a real device](#testing-on-a-real-device)
 - [In-app help](#in-app-help)
+- [Always-available Home button](#always-available-home-button)
 - [Project structure](#project-structure)
 - [Explicitly out of scope](#explicitly-out-of-scope)
 
@@ -139,15 +140,24 @@ time), the fix is isolated to `triggerAddToContacts()` in `src/vcard.js`.
     manual typing.
 - **Voice notes**: tap "Add via Voice Note" and speak the details naturally,
   e.g. *"This is Alex Rivera from Rivera Consulting, my number is
-  555-222-3333."* The browser's built-in speech recognition
+  555-222-3333."* An on-screen example phrase is always shown; a short beep
+  cues when to start talking, and the browser's built-in speech recognition
   (`SpeechRecognition` / `webkitSpeechRecognition`) transcribes it live —
-  shown in an editable "what we heard" box — and phrasing patterns pull out
-  name, company, phone, and email (`src/voice.js`). This is **Android Chrome
-  only for now**: iOS Safari has never implemented the Web Speech API, and
-  there's no cross-platform fallback the way there is for barcodes (a
-  fallback would mean bundling a full speech-to-text model, tens of MB, just
-  for this one feature — deferred as a deliberate size/scope tradeoff). On
-  unsupported browsers the button is hidden and a short note explains why.
+  shown in an editable "what we heard" box — while phrasing patterns pull out
+  name, company, phone, and email (`src/voice.js`). A "🔊 Hear an example"
+  button will read the example aloud via the browser's text-to-speech if
+  tapped, but **nothing plays automatically** — an unprompted synthesized
+  voice on every visit is exactly the kind of auto-play UI this app avoids
+  elsewhere (see [In-app help](#in-app-help)), and not everyone finds a given
+  TTS voice pleasant to listen to. This is **Android Chrome only for now**:
+  iOS Safari has never implemented the Web Speech API (recognition, i.e.
+  speech-to-text — Safari has long supported the *separate* text-to-speech
+  API used for "Hear an example", so that button still works there even
+  though the recognition itself doesn't), and there's no cross-platform
+  fallback the way there is for barcodes (a fallback would mean bundling a
+  full speech-to-text model, tens of MB, just for this one feature —
+  deferred as a deliberate size/scope tradeoff). On unsupported browsers the
+  button is hidden and a short note explains why.
   Two known limitations, both inherent to free-form speech rather than bugs:
   - Recognition patterns are English phrasing only ("my name is...", "I work
     at...", "from...", "with...").
@@ -255,6 +265,25 @@ Contacts" opens your phone's own Contacts app (expected, not a bug), a
 platform-appropriate "Add to Home Screen" tip, and a privacy note (everything
 is on-device). It only opens when the user taps the "?" icon — it does not
 appear automatically.
+
+## Always-available Home button
+
+A 🏠 button appears in the header on every screen except Home itself. This
+matters more than it might seem: installed as a standalone PWA (via "Add to
+Home Screen"), there's no browser chrome — no back button, no URL bar — to
+fall back on. Some screens' own buttons don't lead back to Home either (the
+Result screen's "Rescan" starts another scan; the Processing screen has no
+buttons at all), so without this, certain states would strand the user with
+no way out short of force-quitting the app. Tapping it stops whatever's
+active (camera, voice recognition, speech synthesis) and returns to Home.
+
+*(Implementation note: several elements are shown/hidden via the `hidden`
+HTML attribute, but also carry a class that sets its own `display` property
+— an author-stylesheet rule of equal specificity beats the browser's default
+`[hidden] { display: none }`, so those elements would otherwise stay visible
+regardless of the attribute. A single global `[hidden] { display: none
+!important; }` rule in `src/style.css` restores that guarantee. This was a
+real, previously-unnoticed bug — see `src/style.css`.)*
 
 ## Project structure
 

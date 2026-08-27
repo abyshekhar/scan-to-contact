@@ -16,11 +16,14 @@ import { initHelp } from "./help.js";
 import {
   isVoiceSupported,
   startVoiceRecognition,
+  speakInstructions,
+  playBeep,
   extractNameFromSpokenText,
   extractOrgFromSpokenText,
   extractEmailFromSpokenText,
 } from "./voice.js";
 
+const homeBtn = document.getElementById("home-btn");
 const videoEl = document.getElementById("camera-video");
 const cameraStatusEl = document.getElementById("camera-status");
 const fileInput = document.getElementById("file-input");
@@ -39,6 +42,7 @@ const voiceStatus = document.getElementById("voice-status");
 const voiceTranscript = document.getElementById("voice-transcript");
 const voiceDoneBtn = document.getElementById("voice-done-btn");
 const voiceCancelBtn = document.getElementById("voice-cancel-btn");
+const voiceHearExampleBtn = document.getElementById("voice-hear-example-btn");
 
 const nameInput = document.getElementById("name-input");
 const numberInput = document.getElementById("number-input");
@@ -63,8 +67,25 @@ function showScreen(name) {
   for (const el of document.querySelectorAll(".screen")) {
     el.dataset.active = el.id === `screen-${name}` ? "true" : "false";
   }
+  homeBtn.hidden = name === "home";
   if (name === "home") renderHistory();
 }
+
+// Always-available escape hatch, shown on every screen except Home itself.
+// Installed as a standalone PWA, there's no browser back button or URL bar
+// to fall back on, so every screen needs a guaranteed way out — this stops
+// whichever flow might be active (camera, voice recognition, speech
+// synthesis) rather than relying on each screen's own Cancel/Rescan button,
+// which don't all lead back to Home (Rescan starts another scan, and the
+// Processing screen has no buttons at all).
+function goHome() {
+  stopScanFlow();
+  stopVoiceFlow();
+  saveConfirmation.hidden = true;
+  showScreen("home");
+}
+
+homeBtn.addEventListener("click", goHome);
 
 function showResult({ name, number, email, org, hint }) {
   nameInput.value = name || "";
@@ -232,13 +253,41 @@ uploadBtn.addEventListener("click", () => fileInput.click());
 // --- voice note flow --------------------------------------------------------
 
 let stopVoiceRecognition = null;
+let voiceFlowToken = 0;
+
+// Cues "now talk" with a quick beep by default — no synthesized voice plays
+// unless the user explicitly asks for it via "Hear an example" (`force:
+// true`). A synthesized voice narrating instructions on every single visit,
+// unprompted, is exactly the kind of unsolicited auto-play UI this app
+// deliberately avoids elsewhere (the help modal is opt-in for the same
+// reason) — plus not everyone finds a given TTS voice pleasant to listen to.
+// `token` guards against a stale sequence (from a screen the user already
+// left, or a replay that superseded this one) still updating the UI after
+// the fact — recognition itself is already running by the time this is
+// called, so this never blocks listening, it just cues when to start.
+async function playVoiceIntro(token, { force = false } = {}) {
+  if (force) {
+    voiceStatus.textContent = "🔊 Listen for an example…";
+    await speakInstructions();
+    if (token !== voiceFlowToken) return;
+  }
+
+  voiceStatus.textContent = "Get ready…";
+  await playBeep();
+  if (token !== voiceFlowToken) return;
+  voiceStatus.textContent = "🎤 Listening — speak now";
+}
 
 function startVoiceFlow() {
+  const token = ++voiceFlowToken;
   voiceTranscript.value = "";
-  voiceStatus.textContent = "Listening — say the name, number, email, or company";
   voiceMicIcon.dataset.listening = "true";
   showScreen("voice");
 
+  // Start listening immediately, from the same tap that opened this screen
+  // — that's what keeps microphone permission from being blocked, even
+  // though the intro below may still be playing when results start coming
+  // in (nothing is said during the intro, so the transcript stays empty).
   stopVoiceRecognition = startVoiceRecognition({
     onTranscript: (transcript) => {
       voiceTranscript.value = transcript;
@@ -251,9 +300,13 @@ function startVoiceFlow() {
           : "Didn't catch that — you can edit the text below, or tap Cancel and try again.";
     },
   });
+
+  playVoiceIntro(token);
 }
 
 function stopVoiceFlow() {
+  voiceFlowToken++; // invalidate any in-flight intro sequence
+  window.speechSynthesis?.cancel();
   if (stopVoiceRecognition) {
     stopVoiceRecognition();
     stopVoiceRecognition = null;
@@ -262,6 +315,15 @@ function stopVoiceFlow() {
 }
 
 voiceBtn.addEventListener("click", startVoiceFlow);
+
+voiceHearExampleBtn.addEventListener("click", () => {
+  // Bump the token first so any still-in-flight auto-intro sequence sees
+  // itself as stale and stops touching the status line once this one starts
+  // — without this, tapping "Hear an example" while the first playback is
+  // still running raced both sequences against each other.
+  const token = ++voiceFlowToken;
+  playVoiceIntro(token, { force: true });
+});
 
 voiceCancelBtn.addEventListener("click", () => {
   stopVoiceFlow();

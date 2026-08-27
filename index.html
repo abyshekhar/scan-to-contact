@@ -21,6 +21,7 @@
   <div id="app">
 
     <header class="topbar">
+      <button id="home-btn" class="icon-btn" aria-label="Go to home screen" title="Home" hidden>🏠</button>
       <span class="brand">📇 ScanToContact</span>
       <button id="help-btn" class="icon-btn" aria-label="How it works" title="How it works">?</button>
     </header>
@@ -79,8 +80,16 @@
       <section id="screen-voice" class="screen">
         <div class="voice-visual">
           <span id="voice-mic-icon" class="voice-mic-icon">🎤</span>
-          <p id="voice-status" class="voice-status">Listening — say the name, number, email, or company</p>
+          <p id="voice-status" class="voice-status">Getting ready…</p>
         </div>
+
+        <p class="voice-example">
+          💡 Try saying: <em>"This is Jane Doe from Acme Inc, my number is
+          555-123-4567."</em>
+        </p>
+        <button id="voice-hear-example-btn" class="ghost-btn voice-hear-btn">
+          🔊 Hear an example
+        </button>
 
         <label class="field-label" for="voice-transcript">What we heard</label>
         <textarea id="voice-transcript" class="field-input voice-transcript" rows="4" placeholder="Your words will appear here as you speak…"></textarea>
@@ -134,9 +143,10 @@
 
       <p class="modal-note">
         <strong>Voice notes:</strong> say things naturally, like "This is Alex
-        Rivera from Rivera Consulting, my number is 555-222-3333." Voice notes
-        need a browser with built-in speech recognition (Chrome on Android) —
-        not available on every browser yet.
+        Rivera from Rivera Consulting, my number is 555-222-3333." (Tap "Hear
+        an example" on that screen if you'd like it read aloud first.) Voice
+        notes need a browser with built-in speech recognition (Chrome on
+        Android) — not available on every browser yet.
       </p>
 
       <p class="modal-note">
