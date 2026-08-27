@@ -3,8 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <title>ScanToContact</title>
-  <meta name="description" content="Scan a phone number from a QR code, barcode, or printed text, and add it to your phone's contacts." />
+  <title>ScanToContact – Scan a Business Card or QR Code to Contacts</title>
+  <meta name="description" content="Scan a QR code, business card, or voice note and add it straight to your phone's Contacts. Free, private, no account — works on iPhone and Android." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://scan-to-contact.vercel.app/" />
+
+  <!-- Open Graph / Twitter Card (social + link-preview SEO) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="ScanToContact" />
+  <meta property="og:url" content="https://scan-to-contact.vercel.app/" />
+  <meta property="og:title" content="ScanToContact – Scan a Business Card or QR Code to Contacts" />
+  <meta property="og:description" content="Scan a QR code, business card, or voice note and add it straight to your phone's Contacts. Free, private, no account — works on iPhone and Android." />
+  <meta property="og:image" content="https://scan-to-contact.vercel.app/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="ScanToContact — scan a QR code, business card, or voice note straight to your Contacts" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="ScanToContact – Scan a Business Card or QR Code to Contacts" />
+  <meta name="twitter:description" content="Scan a QR code, business card, or voice note and add it straight to your phone's Contacts. Free, private, no account." />
+  <meta name="twitter:image" content="https://scan-to-contact.vercel.app/og-image.png" />
 
   <link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#0d9488" />
@@ -16,6 +33,25 @@
   <meta name="apple-mobile-web-app-title" content="ScanToContact" />
 
   <link rel="icon" href="/icons/icon-192.png" />
+
+  <!-- Structured data: helps Google understand this is a free web app -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "ScanToContact",
+    "url": "https://scan-to-contact.vercel.app/",
+    "description": "Scan a QR code, business card, or voice note and add it straight to your phone's Contacts. Free, private, no account — works on iPhone and Android.",
+    "applicationCategory": "UtilitiesApplication",
+    "operatingSystem": "iOS, Android",
+    "browserRequirements": "Requires a modern mobile browser with camera access (Safari, Chrome)",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="app">

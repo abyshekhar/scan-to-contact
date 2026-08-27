@@ -3,11 +3,14 @@
 **Point your phone at a QR code, a barcode, printed text, or just talk — and
 get a new contact ready to save.**
 
+[![CI](https://github.com/abyshekhar/scan-to-contact/actions/workflows/ci.yml/badge.svg)](https://github.com/abyshekhar/scan-to-contact/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/github/license/abyshekhar/scan-to-contact)](LICENSE)
 ![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white)
 ![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-000000)
 ![No backend](https://img.shields.io/badge/backend-none-0d9488)
 ![Made with Vite](https://img.shields.io/badge/built%20with-Vite-646CFF?logo=vite&logoColor=white)
+
+**[Try it live →](https://scan-to-contact.vercel.app/)**
 
 No app to install from a store, no sign-up, no server, no data ever leaving
 your phone. Open a link, scan or speak, and your phone's own Contacts app
@@ -37,6 +40,42 @@ opens with a new contact ready to review and save.
 - 📲 **Installable** — add it to your home screen on iOS or Android and it
   works offline after the first visit.
 
+## 🆚 How this differs from typical business-card scanner apps
+
+Most apps in this space are networking platforms first, scanners second —
+free to start, but built to push you toward an account, a cloud dashboard,
+and eventually a subscription. ScanToContact is built the other way around:
+
+- **No account, ever.** Open the link and start scanning. Nothing to sign up
+  for, nothing to log into.
+- **No cloud, no dashboard, no server.** Every scan happens entirely on your
+  phone. There's nothing to sync because there's nowhere to sync it to.
+- **Nothing to leak.** Because there's no backend, there's no step where the
+  name or email you just scanned gets sent off to a third-party "enrichment"
+  service to auto-fill a profile photo or job history — a common feature in
+  similar apps, and a real privacy tradeoff most people scanning a card at a
+  conference never think to ask about. We don't show you a photo for the
+  same reason we don't have your data afterward: we never asked anyone for
+  it in the first place.
+- **Free, permanently.** No premium tier gating basic features like exporting
+  a contact or scanning more than a couple of cards a month — no servers to
+  fund means no subscription to sell.
+- **Works fully offline after the first visit.** Installable straight from
+  the browser, no app store required, and the scanning/OCR engines are
+  cached for offline use — most cloud-dependent competitors stop working the
+  moment you lose signal.
+- **Goes straight into your phone's real Contacts app**, not a separate
+  proprietary contact list you have to manage, export, or pay to integrate
+  with a CRM.
+- **A voice note is a first-class input, not just the camera** — say a
+  contact's details aloud and they're extracted the same way a scanned card
+  would be.
+
+The tradeoff, stated plainly: you won't get an auto-fetched profile picture
+or contact enrichment here. That's not an oversight — the only way to build
+it is to introduce exactly the account/server/third-party-lookup layer this
+app exists to avoid.
+
 ## 🚀 Quick start
 
 ```bash
@@ -60,6 +99,7 @@ camera access, testing the Contacts hand-off on a real device, etc.).
 
 ## Table of contents
 
+- [How this differs from typical business-card scanner apps](#-how-this-differs-from-typical-business-card-scanner-apps)
 - [How it works (the important part)](#how-it-works-the-important-part)
 - [What gets scanned](#what-gets-scanned)
 - [Running locally](#running-locally)
@@ -69,6 +109,8 @@ camera access, testing the Contacts hand-off on a real device, etc.).
 - [Always-available Home button](#always-available-home-button)
 - [Project structure](#project-structure)
 - [Explicitly out of scope](#explicitly-out-of-scope)
+- [SEO](#seo)
+- [Contributing](#contributing)
 
 ## How it works (the important part)
 
@@ -298,8 +340,14 @@ src/voice.js              voice-note capture (Web Speech API) + spoken-text fiel
 src/style.css            all styling (mobile-first, light/dark)
 public/manifest.json     PWA manifest
 public/sw.js             hand-written service worker (precache shell + cache-as-you-go for the rest)
-scripts/generate-icons.mjs    generates public/icons/*.png (no external tools needed)
-scripts/copy-ocr-assets.mjs   copies tesseract.js's worker/core/lang files into public/ for offline use
+public/robots.txt        allows crawling + points to the sitemap
+public/sitemap.xml       single-URL sitemap (this is a one-page app)
+public/og-image.png      social/link-preview image (Open Graph + Twitter Card)
+scripts/generate-icons.mjs         generates public/icons/*.png (no external tools needed)
+scripts/copy-ocr-assets.mjs        copies tesseract.js's worker/core/lang files into public/ for offline use
+scripts/generate-social-image.mjs  regenerates public/og-image.png + docs/social-preview.png (manual, needs `canvas`)
+.github/workflows/ci.yml           GitHub Actions: installs deps and runs a production build on every push/PR
+.github/ISSUE_TEMPLATE/            bug report + feature request templates
 ```
 
 ## Explicitly out of scope
@@ -308,6 +356,39 @@ scripts/copy-ocr-assets.mjs   copies tesseract.js's worker/core/lang files into 
 - No silent/direct writing into the OS contacts database — the user always
   sees and confirms in the native Add Contact screen.
 - No native app / app store packaging — this is a browser-only PWA.
+
+## SEO
+
+The deployed app at `https://scan-to-contact.vercel.app/` is set up to be
+findable and to look right when shared:
+
+- A descriptive `<title>` and meta description, a canonical link, and an
+  explicit `robots` tag allowing indexing.
+- Open Graph + Twitter Card tags (with `public/og-image.png`) so links shared
+  in Slack/iMessage/social apps show a proper preview card instead of a bare
+  URL.
+- `schema.org` `WebApplication` structured data (JSON-LD) so Google can
+  understand what this is and that it's free.
+- `public/robots.txt` and `public/sitemap.xml` (a single-URL sitemap — this
+  is a one-page app).
+
+**If you deploy this to a different domain** (a custom domain, a different
+Vercel project name, etc.), update the URL in all of these places to match —
+they're currently hardcoded to the URL above:
+- `index.html`: the canonical link, all `og:*`/`twitter:*` meta tags, and the
+  JSON-LD `url`
+- `public/robots.txt`: the `Sitemap:` line
+- `public/sitemap.xml`: the `<loc>` value
+
+After deploying to a new domain, submitting the sitemap URL in
+[Google Search Console](https://search.google.com/search-console) will get
+it crawled much faster than waiting for organic discovery.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) — short version: fork it, keep
+changes minimal, test camera/OCR/voice/vCard changes on a real phone before
+opening a PR.
 
 ## License
 
