@@ -89,17 +89,30 @@ function titleCaseWords(text) {
     .join(" ");
 }
 
-// Words that typically start the next clause in a dictated contact note —
-// used as a lookahead boundary so a capture group doesn't run on into
-// unrelated words (Web Speech API transcripts usually carry no punctuation).
-const NEXT_CLAUSE = "my|i|is|it's|calling|call|work|works|from|with|at|phone|number|email|thanks|thank you|please";
-const STOP_LOOKAHEAD = `(?=\\s+(?:${NEXT_CLAUSE})\\b|$)`;
+// Words that typically start the next clause in a dictated contact note.
+// Each captured word is checked against this list individually (rather than
+// requiring one of these words to trail the whole capture) — that way a
+// name/company still comes out correctly even when it's followed directly by
+// a number or a word we don't recognize, instead of the capture failing
+// outright just because no known "next clause" cue happened to follow.
+const STOP_WORDS = "my|i|is|it's|calling|call|work|works|from|with|at|phone|number|email|thanks|thank you|please|and|so|ok|okay";
+const NAME_WORD = `(?!(?:${STOP_WORDS})\\b)[a-z][a-z'-]*`;
+const ORG_WORD = `(?!(?:${STOP_WORDS})\\b)[a-z0-9][a-z0-9'-]*`; // orgs may contain digits, e.g. "7-Eleven"
+
+// Builds a capture group for "1 word, plus up to `maxExtra` more", where
+// each word is independently checked against STOP_WORDS and must match
+// `wordPattern` — so it naturally stops at the first stop word or the first
+// token that doesn't fit (e.g. a digit run, for names) without needing that
+// token to match anything specific.
+function phraseCapture(wordPattern, maxExtra) {
+  return `(${wordPattern}(?:\\s+${wordPattern}){0,${maxExtra}})`;
+}
 
 const NAME_PATTERNS = [
-  new RegExp(`\\bmy name is ([a-z][a-z' -]*?)${STOP_LOOKAHEAD}`, "i"),
-  new RegExp(`\\bthis is ([a-z][a-z' -]*?)${STOP_LOOKAHEAD}`, "i"),
-  new RegExp(`\\bi'?m ([a-z][a-z' -]*?)${STOP_LOOKAHEAD}`, "i"),
-  new RegExp(`\\bi am ([a-z][a-z' -]*?)${STOP_LOOKAHEAD}`, "i"),
+  new RegExp(`\\bmy name is ${phraseCapture(NAME_WORD, 2)}`, "i"),
+  new RegExp(`\\bthis is ${phraseCapture(NAME_WORD, 2)}`, "i"),
+  new RegExp(`\\bi'?m ${phraseCapture(NAME_WORD, 2)}`, "i"),
+  new RegExp(`\\bi am ${phraseCapture(NAME_WORD, 2)}`, "i"),
 ];
 
 export function extractNameFromSpokenText(text) {
@@ -112,10 +125,10 @@ export function extractNameFromSpokenText(text) {
 }
 
 const ORG_PATTERNS = [
-  new RegExp(`\\bfrom ([a-z][a-z0-9' -]*?)${STOP_LOOKAHEAD}`, "i"),
-  new RegExp(`\\bi work at ([a-z][a-z0-9' -]*?)${STOP_LOOKAHEAD}`, "i"),
-  new RegExp(`\\bcompany is ([a-z][a-z0-9' -]*?)${STOP_LOOKAHEAD}`, "i"),
-  new RegExp(`\\bwith ([a-z][a-z0-9' -]*?)${STOP_LOOKAHEAD}`, "i"),
+  new RegExp(`\\bfrom ${phraseCapture(ORG_WORD, 3)}`, "i"),
+  new RegExp(`\\bi work at ${phraseCapture(ORG_WORD, 3)}`, "i"),
+  new RegExp(`\\bcompany is ${phraseCapture(ORG_WORD, 3)}`, "i"),
+  new RegExp(`\\bwith ${phraseCapture(ORG_WORD, 3)}`, "i"),
 ];
 
 export function extractOrgFromSpokenText(text) {

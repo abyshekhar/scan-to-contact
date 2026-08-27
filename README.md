@@ -1,10 +1,73 @@
 # ScanToContact
 
-An installable PWA that captures a contact's details — from a QR code, a
-barcode, printed text (e.g. a business card), or a spoken voice note — then
-hands them to your phone's native **Add Contact** screen so you can review
-and save. Everything runs client-side: no backend, no accounts, no data
-leaves the device.
+**Point your phone at a QR code, a barcode, printed text, or just talk — and
+get a new contact ready to save.**
+
+[![License: MIT](https://img.shields.io/github/license/abyshekhar/scan-to-contact)](LICENSE)
+![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?logo=pwa&logoColor=white)
+![Platforms](https://img.shields.io/badge/platforms-iOS%20%7C%20Android-000000)
+![No backend](https://img.shields.io/badge/backend-none-0d9488)
+![Made with Vite](https://img.shields.io/badge/built%20with-Vite-646CFF?logo=vite&logoColor=white)
+
+No app to install from a store, no sign-up, no server, no data ever leaving
+your phone. Open a link, scan or speak, and your phone's own Contacts app
+opens with a new contact ready to review and save.
+
+<p align="center">
+  <img src="docs/screenshots/home.png" width="31%" alt="Home screen with Scan, Upload, and Voice Note options, plus recent scans" />
+  <img src="docs/screenshots/result.png" width="31%" alt="Result screen with name, phone, email, and company auto-filled from a scanned business card" />
+  <img src="docs/screenshots/help.png" width="31%" alt="In-app how-it-works help screen" />
+</p>
+
+## ✨ Features
+
+- 📷 **Scan a QR code or barcode** — instant, using the browser's native
+  scanner where available, with a fallback that works everywhere else
+  (including iOS Safari).
+- 🪪 **Scan a business card** — no barcode? OCR reads the printed text and
+  guesses name, phone, email, *and* company from how the card is laid out.
+- 🎤 **Or just say it** — "This is Alex Rivera from Rivera Consulting, my
+  number is 555-222-3333" gets transcribed and parsed into the right fields
+  (Android Chrome, for now).
+- 🖼️ **Upload a photo** instead of using the live camera, any time.
+- ✅ **Hands off to your phone's real Contacts app** — this app never writes
+  to your address book directly; you always see and confirm the native "Add
+  Contact" screen before anything is saved.
+- 🔒 **100% on-device** — no backend, no account, nothing uploaded, ever.
+- 📲 **Installable** — add it to your home screen on iOS or Android and it
+  works offline after the first visit.
+
+## 🚀 Quick start
+
+```bash
+npm install
+npm run dev      # http://localhost:5173
+```
+
+Deploy the static build anywhere over HTTPS in one command:
+
+```bash
+npm run build
+npx vercel --prod                       # or:
+npx netlify-cli deploy --prod --dir=dist
+```
+
+See [Running locally](#running-locally) and [Building & deploying](#building--deploying)
+below for the details that make a real difference on a phone (HTTPS for
+camera access, testing the Contacts hand-off on a real device, etc.).
+
+---
+
+## Table of contents
+
+- [How it works (the important part)](#how-it-works-the-important-part)
+- [What gets scanned](#what-gets-scanned)
+- [Running locally](#running-locally)
+- [Building & deploying](#building--deploying)
+- [Testing on a real device](#testing-on-a-real-device)
+- [In-app help](#in-app-help)
+- [Project structure](#project-structure)
+- [Explicitly out of scope](#explicitly-out-of-scope)
 
 ## How it works (the important part)
 
@@ -216,3 +279,7 @@ scripts/copy-ocr-assets.mjs   copies tesseract.js's worker/core/lang files into 
 - No silent/direct writing into the OS contacts database — the user always
   sees and confirms in the native Add Contact screen.
 - No native app / app store packaging — this is a browser-only PWA.
+
+## License
+
+[MIT](LICENSE)
