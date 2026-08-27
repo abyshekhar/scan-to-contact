@@ -232,6 +232,50 @@ main {
   margin-inline: auto;
 }
 
+/* Voice note screen */
+.voice-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 0 8px;
+}
+
+.voice-mic-icon {
+  font-size: 3rem;
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--teal), var(--teal-dark));
+  animation: mic-pulse 1.6s ease-in-out infinite;
+}
+
+.voice-mic-icon[data-listening="false"] {
+  animation: none;
+  background: var(--muted);
+}
+
+@keyframes mic-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(13, 148, 136, 0.4); }
+  50% { box-shadow: 0 0 0 16px rgba(13, 148, 136, 0); }
+}
+
+.voice-status {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.voice-transcript {
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.4;
+}
+
 .camera-controls {
   display: flex;
   flex-direction: column;

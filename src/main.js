@@ -7,22 +7,38 @@ import {
   ocrImage,
   extractPhoneNumberFromText,
   extractEmailFromText,
+  extractNameAndOrgFromLines,
   parseBarcodePayload,
 } from "./scanner.js";
 import { buildVCard, triggerAddToContacts } from "./vcard.js";
 import { getHistory, addHistoryEntry, removeHistoryEntry } from "./history.js";
 import { initHelp } from "./help.js";
+import {
+  isVoiceSupported,
+  startVoiceRecognition,
+  extractNameFromSpokenText,
+  extractOrgFromSpokenText,
+  extractEmailFromSpokenText,
+} from "./voice.js";
 
 const videoEl = document.getElementById("camera-video");
 const cameraStatusEl = document.getElementById("camera-status");
 const fileInput = document.getElementById("file-input");
 const uploadBtn = document.getElementById("upload-btn");
+const voiceBtn = document.getElementById("voice-btn");
+const voiceUnsupportedNote = document.getElementById("voice-unsupported-note");
 
 const scanBtn = document.getElementById("scan-btn");
 const captureBtn = document.getElementById("capture-btn");
 const cancelScanBtn = document.getElementById("cancel-scan-btn");
 
 const processingLabel = document.getElementById("processing-label");
+
+const voiceMicIcon = document.getElementById("voice-mic-icon");
+const voiceStatus = document.getElementById("voice-status");
+const voiceTranscript = document.getElementById("voice-transcript");
+const voiceDoneBtn = document.getElementById("voice-done-btn");
+const voiceCancelBtn = document.getElementById("voice-cancel-btn");
 
 const nameInput = document.getElementById("name-input");
 const numberInput = document.getElementById("number-input");
@@ -152,13 +168,15 @@ async function processCapturedImage(canvas) {
 
   processingLabel.textContent = "No barcode found — reading printed text…";
   try {
-    const text = await ocrImage(canvas);
+    const { text, lines } = await ocrImage(canvas);
     const number = extractPhoneNumberFromText(text);
     const email = extractEmailFromText(text);
+    const { name, org } = extractNameAndOrgFromLines(lines);
     showResult({
       number: number || "",
-      name: "",
+      name,
       email: email || "",
+      org,
       hint:
         number || email
           ? "Detected from the photo — please double-check it."
@@ -211,6 +229,63 @@ scanBtn.addEventListener("click", startScanFlow);
 
 uploadBtn.addEventListener("click", () => fileInput.click());
 
+// --- voice note flow --------------------------------------------------------
+
+let stopVoiceRecognition = null;
+
+function startVoiceFlow() {
+  voiceTranscript.value = "";
+  voiceStatus.textContent = "Listening — say the name, number, email, or company";
+  voiceMicIcon.dataset.listening = "true";
+  showScreen("voice");
+
+  stopVoiceRecognition = startVoiceRecognition({
+    onTranscript: (transcript) => {
+      voiceTranscript.value = transcript;
+    },
+    onError: (error) => {
+      voiceMicIcon.dataset.listening = "false";
+      voiceStatus.textContent =
+        error === "not-allowed"
+          ? "Microphone access was blocked — allow it in your browser settings and try again."
+          : "Didn't catch that — you can edit the text below, or tap Cancel and try again.";
+    },
+  });
+}
+
+function stopVoiceFlow() {
+  if (stopVoiceRecognition) {
+    stopVoiceRecognition();
+    stopVoiceRecognition = null;
+  }
+  voiceMicIcon.dataset.listening = "false";
+}
+
+voiceBtn.addEventListener("click", startVoiceFlow);
+
+voiceCancelBtn.addEventListener("click", () => {
+  stopVoiceFlow();
+  showScreen("home");
+});
+
+voiceDoneBtn.addEventListener("click", () => {
+  stopVoiceFlow();
+  const transcript = voiceTranscript.value.trim();
+  const number = extractPhoneNumberFromText(transcript);
+  const email = extractEmailFromSpokenText(transcript);
+  const name = extractNameFromSpokenText(transcript);
+  const org = extractOrgFromSpokenText(transcript);
+  showResult({
+    number: number || "",
+    name,
+    email,
+    org,
+    hint: transcript
+      ? "From your voice note — please double-check it."
+      : "Didn't hear anything — please enter the details manually.",
+  });
+});
+
 cancelScanBtn.addEventListener("click", () => {
   stopScanFlow();
   showScreen("home");
@@ -257,6 +332,12 @@ rescanBtn.addEventListener("click", () => {
 
 initHelp();
 renderHistory();
+
+if (isVoiceSupported()) {
+  voiceBtn.hidden = false;
+} else {
+  voiceUnsupportedNote.hidden = false;
+}
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {

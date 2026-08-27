@@ -1,10 +1,10 @@
 # ScanToContact
 
-An installable PWA that scans a phone number — from a QR code, a barcode, or
-printed digits — plus any name, email, or company that comes with it, then
-hands the details to your phone's native **Add Contact** screen so you can
-review and save. Everything runs client-side: no backend, no accounts, no
-data leaves the device.
+An installable PWA that captures a contact's details — from a QR code, a
+barcode, printed text (e.g. a business card), or a spoken voice note — then
+hands them to your phone's native **Add Contact** screen so you can review
+and save. Everything runs client-side: no backend, no accounts, no data
+leaves the device.
 
 ## How it works (the important part)
 
@@ -59,12 +59,39 @@ time), the fix is isolated to `triggerAddToContacts()` in `src/vcard.js`.
   - `MECARD:...` (name, phone, email)
   - `BEGIN:VCARD...END:VCARD` (name, phone, email, organization)
   - Plain text containing a phone number and/or email
-- **Printed text** is the fallback when no barcode is found: the captured
-  frame is OCR'd with `tesseract.js`, and a phone-number-shaped digit run and
-  an email address are pulled out of the recognized text with regexes
-  (tolerant of spaces/dashes/parentheses/dots). Name and company aren't
-  reliably extractable from free-form OCR text, so those stay blank for you
-  to fill in.
+- **Printed text** (e.g. a business card) is the fallback when no barcode is
+  found: the captured frame is OCR'd with `tesseract.js`, and:
+  - a phone-number-shaped digit run and an email address are pulled out with
+    regexes (tolerant of spaces/dashes/parentheses/dots);
+  - a name and company are guessed heuristically from the remaining lines,
+    using each OCR'd line's printed height as a stand-in for font size (the
+    name and company are usually the most prominent text on a card), while
+    excluding lines that look like a job title, street address, website, or
+    the phone/email line already extracted (`extractNameAndOrgFromLines` in
+    `src/scanner.js`).
+  - Unlike a barcode's structured fields, this is inherently a best-effort
+    guess — there's no way to be certain a line of text is a name vs. a
+    slogan. It's deliberately biased toward guessing rather than leaving
+    fields blank, since a wrong guess is a quick edit but a blank field is
+    manual typing.
+- **Voice notes**: tap "Add via Voice Note" and speak the details naturally,
+  e.g. *"This is Alex Rivera from Rivera Consulting, my number is
+  555-222-3333."* The browser's built-in speech recognition
+  (`SpeechRecognition` / `webkitSpeechRecognition`) transcribes it live —
+  shown in an editable "what we heard" box — and phrasing patterns pull out
+  name, company, phone, and email (`src/voice.js`). This is **Android Chrome
+  only for now**: iOS Safari has never implemented the Web Speech API, and
+  there's no cross-platform fallback the way there is for barcodes (a
+  fallback would mean bundling a full speech-to-text model, tens of MB, just
+  for this one feature — deferred as a deliberate size/scope tradeoff). On
+  unsupported browsers the button is hidden and a short note explains why.
+  Two known limitations, both inherent to free-form speech rather than bugs:
+  - Recognition patterns are English phrasing only ("my name is...", "I work
+    at...", "from...", "with...").
+  - A dictated email works when spoken as a single fluid word-run ("alex at
+    example dot com"), but a multi-word company domain spoken with a natural
+    pause ("alex at rivera consulting dot com" meaning `riveraconsulting.com`)
+    won't be reliably assembled — edit the email field by hand in that case.
 - Every field (name, phone, email, company) is shown in an editable form
   before anything is saved — nothing is sent to Contacts without you seeing
   and being able to correct it first.
@@ -139,7 +166,12 @@ access and recommended for service workers.
      opening it (from the download notification, browser download tray, or
      Files app) launches the Contacts app's "Create contact" screen,
      pre-filled.
-5. **Install / offline**: add the app to the home screen (see below), then
+5. **Voice notes (Android Chrome only)**: tap "Add via Voice Note," grant
+   microphone permission, and speak a contact naturally (see the example
+   phrasing above). Confirm the live transcript appears as you talk, and that
+   "Done" extracts sensible name/phone/email/company. On iPhone, confirm the
+   button is hidden and the explanatory note appears instead.
+6. **Install / offline**: add the app to the home screen (see below), then
    turn on airplane mode and relaunch it from the home screen — the scanner
    UI should still load (camera obviously won't work offline, but the shell,
    OCR engine, and barcode engine are cached from the first visit).
@@ -170,6 +202,7 @@ src/scanner.js           camera, barcode detection (BarcodeDetector + zxing fall
 src/vcard.js             vCard building + the iOS/Android hand-off branching
 src/history.js           localStorage-backed recent-scans safety net
 src/help.js               on-demand help modal (opened via the "?" button)
+src/voice.js              voice-note capture (Web Speech API) + spoken-text field extraction
 src/style.css            all styling (mobile-first, light/dark)
 public/manifest.json     PWA manifest
 public/sw.js             hand-written service worker (precache shell + cache-as-you-go for the rest)

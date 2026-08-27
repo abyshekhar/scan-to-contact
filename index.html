@@ -29,7 +29,7 @@
 
       <!-- HOME SCREEN -->
       <section id="screen-home" class="screen" data-active="true">
-        <p class="tagline">Scan a phone number — QR code, barcode, or printed digits — and add it straight to your contacts.</p>
+        <p class="tagline">Scan a phone number — QR code, barcode, printed digits, or a spoken voice note — and add it straight to your contacts.</p>
 
         <button id="scan-btn" class="big-btn">
           <span class="big-btn-icon">📷</span>
@@ -41,6 +41,14 @@
           <span>Upload a Photo</span>
         </button>
         <input id="file-input" type="file" accept="image/*" hidden />
+
+        <button id="voice-btn" class="ghost-btn" hidden>
+          <span class="big-btn-icon">🎤</span>
+          <span>Add via Voice Note</span>
+        </button>
+        <p id="voice-unsupported-note" class="hint" hidden>
+          Voice notes need a browser with built-in speech recognition (e.g. Chrome on Android) — not available in this browser yet.
+        </p>
 
         <div id="history-wrap" hidden>
           <h2 class="section-title">Recent scans</h2>
@@ -65,6 +73,20 @@
       <section id="screen-processing" class="screen">
         <div class="spinner" aria-hidden="true"></div>
         <p id="processing-label">Reading text from the image…</p>
+      </section>
+
+      <!-- VOICE NOTE SCREEN -->
+      <section id="screen-voice" class="screen">
+        <div class="voice-visual">
+          <span id="voice-mic-icon" class="voice-mic-icon">🎤</span>
+          <p id="voice-status" class="voice-status">Listening — say the name, number, email, or company</p>
+        </div>
+
+        <label class="field-label" for="voice-transcript">What we heard</label>
+        <textarea id="voice-transcript" class="field-input voice-transcript" rows="4" placeholder="Your words will appear here as you speak…"></textarea>
+
+        <button id="voice-done-btn" class="big-btn">✅ Done — Extract Details</button>
+        <button id="voice-cancel-btn" class="ghost-btn">Cancel</button>
       </section>
 
       <!-- RESULT SCREEN -->
@@ -103,12 +125,19 @@
       <p class="modal-lead">Scan a phone number from a QR code, barcode, or printed text, and add it to your phone's contacts.</p>
 
       <ol class="steps">
-        <li><strong>Tap Scan.</strong> Point your camera at the number.</li>
-        <li><strong>Capture</strong> the QR code, barcode, or printed digits.</li>
+        <li><strong>Tap Scan, Upload, or Voice Note.</strong> Point your camera at the number, choose a photo, or speak the details aloud.</li>
+        <li><strong>Capture</strong> the QR code, barcode, printed digits, or your spoken words.</li>
         <li><strong>Check the result.</strong> Fix the number if needed, and add a name, email, or company.</li>
         <li><strong>Tap "Save to Contacts."</strong></li>
         <li><strong>Finish in the Contacts app</strong> that opens, and tap Save there.</li>
       </ol>
+
+      <p class="modal-note">
+        <strong>Voice notes:</strong> say things naturally, like "This is Alex
+        Rivera from Rivera Consulting, my number is 555-222-3333." Voice notes
+        need a browser with built-in speech recognition (Chrome on Android) —
+        not available on every browser yet.
+      </p>
 
       <p class="modal-note">
         <strong>Heads up:</strong> after tapping "Save to Contacts," your phone's own Contacts app will open automatically.

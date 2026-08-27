@@ -159,10 +159,25 @@ function getWorker() {
   return workerPromise;
 }
 
+// Requests block/paragraph/line structure (not just flat text) so callers
+// can use each line's height as a proxy for font size — on a business card,
+// the person's name and the company name are usually the tallest printed
+// text, which is a much stronger signal than word order alone.
 export async function ocrImage(canvas) {
   const worker = await getWorker();
-  const { data } = await worker.recognize(canvas);
-  return data.text || "";
+  const { data } = await worker.recognize(canvas, {}, { blocks: true });
+  const lines = [];
+  for (const block of data.blocks || []) {
+    for (const paragraph of block.paragraphs || []) {
+      for (const line of paragraph.lines || []) {
+        const text = (line.text || "").trim();
+        if (!text) continue;
+        const height = line.bbox ? line.bbox.y1 - line.bbox.y0 : 0;
+        lines.push({ text, height });
+      }
+    }
+  }
+  return { text: data.text || "", lines };
 }
 
 // --- phone number extraction ---------------------------------------------
@@ -188,6 +203,67 @@ export function extractPhoneNumberFromText(text) {
     }
   }
   return best;
+}
+
+const COMPANY_SUFFIX_RE =
+  /\b(inc|llc|ltd|corp(oration)?|co\.?|company|group|solutions|services|enterprises|partners|associates|studio|agency|consulting|technolog(y|ies)|systems|industries|holdings|international|labs?)\b/i;
+const JOB_TITLE_RE =
+  /\b(ceo|cfo|cto|coo|president|vice president|vp|director|manager|founder|co-founder|owner|engineer|sales|marketing|executive|consultant|specialist|representative|coordinator|officer|partner|attorney|accountant|analyst|architect|designer|developer|realtor|broker)\b/i;
+const ADDRESS_HINT_RE = /\b(street|st|avenue|ave|road|rd|suite|ste|floor|fl|blvd|drive|dr|lane|ln|p\.?o\.? box)\.?\b/i;
+const WEBSITE_RE = /(www\.|https?:\/\/|\.(com|net|org|io|co|biz)\b)/i;
+const NAME_WORD_RE = /^[A-Za-z][A-Za-z.'-]*$/;
+
+function looksLikePhoneLine(text) {
+  return extractPhoneNumberFromText(text) !== null;
+}
+
+// Best-effort heuristic for pulling a person's name and company/organization
+// out of OCR'd business-card text, which — unlike a barcode payload — has no
+// structured fields to read. There is no way to be certain, so this trades
+// some false positives for not leaving the fields blank; both are shown in
+// an editable form before saving, so a wrong guess just needs a quick edit.
+//
+// `lines` comes from ocrImage() and includes each line's pixel height, used
+// as a stand-in for font size: on a business card, the name and company are
+// almost always the most prominent (tallest) printed lines.
+export function extractNameAndOrgFromLines(lines) {
+  if (!lines || lines.length === 0) return { name: "", org: "" };
+
+  const candidates = lines.filter(
+    (line) => line.text && !looksLikePhoneLine(line.text) && !line.text.includes("@")
+  );
+
+  const isNoise = (text) => JOB_TITLE_RE.test(text) || ADDRESS_HINT_RE.test(text) || WEBSITE_RE.test(text) || /\d/.test(text);
+
+  const nameCandidates = candidates.filter((line) => {
+    if (isNoise(line.text) || COMPANY_SUFFIX_RE.test(line.text)) return false;
+    const words = line.text.split(/\s+/).filter(Boolean);
+    if (words.length < 1 || words.length > 4 || line.text.length > 40) return false;
+    return words.every((w) => NAME_WORD_RE.test(w));
+  });
+  nameCandidates.sort((a, b) => b.height - a.height);
+  const name = nameCandidates[0]?.text || "";
+
+  const orgWithSuffix = candidates.filter(
+    (line) => line.text !== name && COMPANY_SUFFIX_RE.test(line.text) && !JOB_TITLE_RE.test(line.text)
+  );
+  orgWithSuffix.sort((a, b) => b.height - a.height);
+
+  let org = orgWithSuffix[0]?.text || "";
+  if (!org) {
+    // No recognizable "Inc/LLC/Co./Group/..." suffix — fall back to the
+    // next most prominent line that isn't the name and isn't obviously a
+    // title/address/phone/email/website line.
+    const fallback = candidates.filter((line) => {
+      if (line.text === name || isNoise(line.text)) return false;
+      const words = line.text.split(/\s+/).filter(Boolean);
+      return words.length > 0 && words.length <= 6 && line.text.length <= 40;
+    });
+    fallback.sort((a, b) => b.height - a.height);
+    org = fallback[0]?.text || "";
+  }
+
+  return { name, org };
 }
 
 // Well-delimited by `@` and surrounding whitespace/punctuation, so unlike
