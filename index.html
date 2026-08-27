@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+  <title>ScanToContact</title>
+  <meta name="description" content="Scan a phone number from a QR code, barcode, or printed text, and add it to your phone's contacts." />
+
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0d9488" />
+
+  <!-- iOS install / standalone support (iOS ignores manifest.json for these) -->
+  <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ScanToContact" />
+
+  <link rel="icon" href="/icons/icon-192.png" />
+</head>
+<body>
+  <div id="app">
+
+    <header class="topbar">
+      <span class="brand">📇 ScanToContact</span>
+      <button id="help-btn" class="icon-btn" aria-label="How it works" title="How it works">?</button>
+    </header>
+
+    <main>
+
+      <!-- HOME SCREEN -->
+      <section id="screen-home" class="screen" data-active="true">
+        <p class="tagline">Scan a phone number — QR code, barcode, or printed digits — and add it straight to your contacts.</p>
+
+        <button id="scan-btn" class="big-btn">
+          <span class="big-btn-icon">📷</span>
+          <span>Scan a Number</span>
+        </button>
+
+        <label class="fallback-label" for="file-input">
+          Camera not working? Use your photo library instead.
+        </label>
+        <input id="file-input" type="file" accept="image/*" capture="environment" hidden />
+
+        <div id="history-wrap" hidden>
+          <h2 class="section-title">Recent scans</h2>
+          <ul id="history-list" class="history-list"></ul>
+        </div>
+      </section>
+
+      <!-- CAMERA SCREEN -->
+      <section id="screen-camera" class="screen">
+        <div class="camera-wrap">
+          <video id="camera-video" playsinline autoplay muted></video>
+          <div class="camera-guide" aria-hidden="true"></div>
+          <p id="camera-status" class="camera-status">Point the camera at a QR code, barcode, or printed number</p>
+        </div>
+        <div class="camera-controls">
+          <button id="capture-btn" class="big-btn">Capture</button>
+          <button id="cancel-scan-btn" class="ghost-btn">Cancel</button>
+        </div>
+      </section>
+
+      <!-- PROCESSING SCREEN -->
+      <section id="screen-processing" class="screen">
+        <div class="spinner" aria-hidden="true"></div>
+        <p id="processing-label">Reading text from the image…</p>
+      </section>
+
+      <!-- RESULT SCREEN -->
+      <section id="screen-result" class="screen">
+        <h2 class="section-title" id="result-heading">Contact details</h2>
+        <p id="result-hint" class="hint"></p>
+
+        <label class="field-label" for="name-input">Name</label>
+        <input id="name-input" class="field-input" type="text" placeholder="New Contact" autocomplete="off" />
+
+        <label class="field-label" for="number-input">Phone number</label>
+        <input id="number-input" class="field-input number-input" type="tel" placeholder="e.g. +1 555 123 4567" inputmode="tel" autocomplete="off" />
+
+        <label class="field-label" for="email-input">Email <span class="field-optional">(optional)</span></label>
+        <input id="email-input" class="field-input" type="email" placeholder="name@example.com" inputmode="email" autocomplete="off" />
+
+        <label class="field-label" for="company-input">Company <span class="field-optional">(optional)</span></label>
+        <input id="company-input" class="field-input" type="text" placeholder="e.g. Acme Plumbing" autocomplete="off" />
+
+        <button id="save-btn" class="big-btn">✅ Save to Contacts</button>
+        <button id="rescan-btn" class="ghost-btn">🔄 Rescan</button>
+
+        <p id="save-confirmation" class="save-confirmation" hidden>
+          Opened in Contacts — finish saving there. Didn't see it? Your scan is kept in <strong>Recent scans</strong> so you can try again.
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- HELP MODAL -->
+  <div id="help-modal" class="modal-overlay" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <button id="help-close" class="icon-btn modal-close" aria-label="Close">✕</button>
+      <h2 id="help-title">How ScanToContact works</h2>
+      <p class="modal-lead">Scan a phone number from a QR code, barcode, or printed text, and add it to your phone's contacts.</p>
+
+      <ol class="steps">
+        <li><strong>Tap Scan.</strong> Point your camera at the number.</li>
+        <li><strong>Capture</strong> the QR code, barcode, or printed digits.</li>
+        <li><strong>Check the result.</strong> Fix the number if needed, and add a name, email, or company.</li>
+        <li><strong>Tap "Save to Contacts."</strong></li>
+        <li><strong>Finish in the Contacts app</strong> that opens, and tap Save there.</li>
+      </ol>
+
+      <p class="modal-note">
+        <strong>Heads up:</strong> after tapping "Save to Contacts," your phone's own Contacts app will open automatically.
+        That's expected — this app can't save contacts directly, so you confirm and save the last step yourself.
+      </p>
+
+      <p class="modal-note" id="install-tip">
+        <strong>Add to your home screen:</strong>
+        <span class="ios-only">On iPhone: tap Share, then "Add to Home Screen."</span>
+        <span class="android-only">On Android: tap the menu (⋮) and choose "Add to Home screen" or "Install app."</span>
+      </p>
+
+      <p class="modal-note">
+        <strong>Privacy:</strong> everything happens on your device. Nothing is uploaded anywhere.
+      </p>
+
+      <button id="help-got-it" class="big-btn">Got it</button>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
