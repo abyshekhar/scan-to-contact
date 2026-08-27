@@ -9,13 +9,19 @@
 //     present, and always refresh the cache from the network in the
 //     background), so the whole app shell ends up cached for offline use
 //     after one normal visit.
-const CACHE_NAME = "scan-to-contact-v1";
+const CACHE_NAME = "scan-to-contact-v2";
 
 const PRECACHE_URLS = [
   "/",
   "/manifest.json",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  "/icons/icon-192-maskable.png",
+  "/icons/icon-512-maskable.png",
+  "/icons/apple-touch-icon.png",
+  "/favicon.svg",
+  "/favicon-32.png",
+  "/favicon-16.png",
   "/tesseract/worker.min.js",
   "/tesseract/tesseract-core-simd-lstm.wasm.js",
   "/tessdata/eng.traineddata.gz",

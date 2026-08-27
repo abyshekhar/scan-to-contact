@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/readme-banner.png" width="100%" alt="ScanToContact — point your phone at it, get a contact ready to save" />
+</p>
+
 # ScanToContact
 
 **Point your phone at a QR code, a barcode, printed text, or just talk — and
@@ -108,6 +112,7 @@ camera access, testing the Contacts hand-off on a real device, etc.).
 - [In-app help](#in-app-help)
 - [Always-available Home button](#always-available-home-button)
 - [Project structure](#project-structure)
+- [Brand assets](#brand-assets)
 - [Explicitly out of scope](#explicitly-out-of-scope)
 - [SEO](#seo)
 - [Contributing](#contributing)
@@ -214,20 +219,19 @@ time), the fix is isolated to `triggerAddToContacts()` in `src/vcard.js`.
 ## Running locally
 
 ```bash
-npm install   # also runs postinstall: generates icons + copies OCR/barcode assets locally
+npm install   # also runs postinstall: copies OCR/barcode assets locally
 npm run dev   # starts Vite on http://localhost:5173
 ```
 
-`npm install`'s `postinstall` step does two things automatically:
-- Generates the two placeholder app icons (`public/icons/icon-192.png`,
-  `icon-512.png`) — a small script-drawn phone glyph, no external tools
-  required. Swap these for real artwork whenever you like; just keep the
-  same filenames/sizes or update `public/manifest.json`.
-- Copies the `tesseract.js` worker, WASM core, and English trained-data file
-  out of `node_modules` into `public/tesseract/` and `public/tessdata/`, so
-  OCR assets are served as plain static files (needed so the service worker
-  can precache them for offline use) instead of being fetched from a CDN at
-  runtime.
+`npm install`'s `postinstall` step copies the `tesseract.js` worker, WASM
+core, and English trained-data file out of `node_modules` into
+`public/tesseract/` and `public/tessdata/`, so OCR assets are served as
+plain static files (needed so the service worker can precache them for
+offline use) instead of being fetched from a CDN at runtime.
+
+App icons, favicons, and the social/OG images are committed brand assets
+(not generated at install time) — see [Brand assets](#brand-assets) below
+for what they are and how to regenerate them.
 
 **Camera access requires a secure context.** `localhost` counts as secure, so
 `npm run dev` works fine for UI/logic testing on your own machine. To test the
@@ -343,12 +347,55 @@ public/sw.js             hand-written service worker (precache shell + cache-as-
 public/robots.txt        allows crawling + points to the sitemap
 public/sitemap.xml       single-URL sitemap (this is a one-page app)
 public/og-image.png      social/link-preview image (Open Graph + Twitter Card)
-scripts/generate-icons.mjs         generates public/icons/*.png (no external tools needed)
+public/favicon.svg, favicon-32.png, favicon-16.png    favicons (simplified brand mark)
+public/icons/            app icons — regular + dedicated maskable variants + apple-touch-icon
 scripts/copy-ocr-assets.mjs        copies tesseract.js's worker/core/lang files into public/ for offline use
-scripts/generate-social-image.mjs  regenerates public/og-image.png + docs/social-preview.png (manual, needs `canvas`)
+scripts/generate-brand-assets.mjs  regenerates every brand image asset (manual, needs `canvas` — see Brand assets below)
 .github/workflows/ci.yml           GitHub Actions: installs deps and runs a production build on every push/PR
 .github/ISSUE_TEMPLATE/            bug report + feature request templates
 ```
+
+## Brand assets
+
+<p align="center">
+  <img src="public/icons/icon-512.png" width="96" alt="ScanToContact app icon" />
+</p>
+
+The mark is a camera viewfinder holding a person silhouette, with a scan
+beam crossing it — "point the camera, get a contact" in one shape. It's
+built entirely from the app's existing teal (`#0d9488`), so the icon, the
+PWA's `theme_color`, and the UI all already agree with each other.
+
+Every image below is generated from that one mark by
+`scripts/generate-brand-assets.mjs`:
+
+- **App icons** (`public/icons/icon-192.png`, `icon-512.png`) — full mark on
+  the teal gradient, rounded-square.
+- **Maskable icons** (`icon-192-maskable.png`, `icon-512-maskable.png`) — the
+  mark inset to a 62% safe zone on a full-bleed square background, so
+  aggressive OS masking (a circle crop, for instance) never clips the
+  corner brackets. These are declared separately in `manifest.json` under
+  `purpose: "maskable"` rather than reusing the regular icons.
+- **`apple-touch-icon.png`** (180×180) — the full mark, deliberately *not*
+  pre-rounded: iOS applies its own corner mask, and a pre-rounded source
+  image would double up with it.
+- **Favicons** (`favicon.svg`, `favicon-32.png`, `favicon-16.png`) — a
+  simplified build of the same mark: the scan beam is dropped and the
+  strokes thickened, since both disappear into noise at 16–32px. Solid teal
+  background instead of the gradient, for the same reason.
+- **Social/OG card** (`public/og-image.png`, 1200×630, and
+  `docs/social-preview.png`, 1280×640 for GitHub's social preview upload) —
+  same composition, dark theme, with the differentiator pills from the
+  ["How this differs"](#-how-this-differs-from-typical-business-card-scanner-apps)
+  section.
+- **`docs/readme-banner.png`** (1280×280) — the light-theme header banner
+  at the top of this README.
+
+To change the design, edit `scripts/generate-brand-assets.mjs` and rerun it
+— it needs the native `canvas` package, which isn't part of the normal
+install (see the comment at the top of the script for the exact commands).
+All of its output is committed as static assets; nothing regenerates it
+automatically.
 
 ## Explicitly out of scope
 

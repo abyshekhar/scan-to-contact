@@ -4,7 +4,7 @@
   "description": "Installable PWA: scan a phone number (QR/barcode or printed text) and hand off to your phone's native Contacts app.",
   "main": "index.js",
   "scripts": {
-    "postinstall": "node scripts/generate-icons.mjs && node scripts/copy-ocr-assets.mjs",
+    "postinstall": "node scripts/copy-ocr-assets.mjs",
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
