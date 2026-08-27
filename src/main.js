@@ -16,6 +16,7 @@ import { initHelp } from "./help.js";
 const videoEl = document.getElementById("camera-video");
 const cameraStatusEl = document.getElementById("camera-status");
 const fileInput = document.getElementById("file-input");
+const uploadBtn = document.getElementById("upload-btn");
 
 const scanBtn = document.getElementById("scan-btn");
 const captureBtn = document.getElementById("capture-btn");
@@ -207,6 +208,8 @@ function stopScanFlow() {
 }
 
 scanBtn.addEventListener("click", startScanFlow);
+
+uploadBtn.addEventListener("click", () => fileInput.click());
 
 cancelScanBtn.addEventListener("click", () => {
   stopScanFlow();

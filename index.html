@@ -36,10 +36,11 @@
           <span>Scan a Number</span>
         </button>
 
-        <label class="fallback-label" for="file-input">
-          Camera not working? Use your photo library instead.
-        </label>
-        <input id="file-input" type="file" accept="image/*" capture="environment" hidden />
+        <button id="upload-btn" class="ghost-btn">
+          <span class="big-btn-icon">🖼️</span>
+          <span>Upload a Photo</span>
+        </button>
+        <input id="file-input" type="file" accept="image/*" hidden />
 
         <div id="history-wrap" hidden>
           <h2 class="section-title">Recent scans</h2>
